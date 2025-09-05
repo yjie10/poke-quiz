@@ -1,0 +1,13 @@
+# compiled output
+dist/
+!src/**/*.ts
+*.js
+*.js.map
+*.d.ts
+*.d.ts.map
+
+# node_modules
+node_modules/
+
+# misc
+.DS_Store
