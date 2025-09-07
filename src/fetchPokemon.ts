@@ -1,3 +1,4 @@
+import { capitalize } from './utils';
 interface RawPokemon {
   id: number;
   name: string;
@@ -18,11 +19,7 @@ export const fetchPokemon = async (id: number) => {
   return {
     id: data.id,
     name: capitalize(data.name),
-    types: data.types.map((t: any) => t.type.name),
+    types: data.types.map((t: any) => capitalize(t.type.name)),
     sprite: data.sprites.other.home.front_default,
   };
-};
-
-const capitalize = (str: string): string => {
-  return str.charAt(0).toUpperCase() + str.slice(1);
 };

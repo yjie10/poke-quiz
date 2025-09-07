@@ -1,6 +1,7 @@
 import readline from 'readline';
-import { questionPool, Option } from './questions';
-import { simpleHash } from './utils';
+import { ask, getUserTerastalType } from './prompts';
+import { questionPool, Option, Question } from './questions';
+import { calculateDexNumber } from './utils';
 import { fetchPokemon } from './fetchPokemon';
 
 const rl = readline.createInterface({
@@ -8,22 +9,15 @@ const rl = readline.createInterface({
   output: process.stdout,
 });
 
-const ask = (q: string): Promise<string> => {
-  return new Promise((resolve) => rl.question(q, resolve));
-};
-
-const calculateDexNumber = (scores: Record<string, number>): number => {
-  const personalityStr = Object.entries(scores)
-    .map(([key, val]) => `${key}${val}`)
-    .join('');
-  const hash = (simpleHash(personalityStr) % 1025) + 1;
-  return hash;
+const getRandomQuestions = (count: number): Question[] => {
+  return [...questionPool].sort(() => Math.random() - 0.5).slice(0, count);
 };
 
 const runQuiz = async () => {
   const scores: Record<string, number> = {};
+  const selectedQuestions = getRandomQuestions(5);
 
-  for (const q of questionPool) {
+  for (const q of selectedQuestions) {
     let answer: string;
     let option!: Option;
 
@@ -32,7 +26,7 @@ const runQuiz = async () => {
         .map((option, i) => `${i + 1}. ${option.label}`)
         .join('\n');
 
-      answer = await ask(`${q.text}\n${optionsText}\n`);
+      answer = await ask(rl, `${q.text}\n${optionsText}\n`);
 
       const choice = parseInt(answer, 10);
       if (!isNaN(choice) && choice >= 1 && choice <= q.options.length) {
@@ -49,12 +43,21 @@ const runQuiz = async () => {
     scores[option.trait] = (scores[option.trait] || 0) + option?.value;
   }
 
-  console.log('Quiz finished!');
+  const teraType = await getUserTerastalType(rl);
   const dexNumber = calculateDexNumber(scores);
   const pokemon = await fetchPokemon(dexNumber);
-  console.log(`Your response summoned Pokemon #${pokemon.id}: ${pokemon.name}`);
-  console.log(`Type: ${pokemon.types.join(' / ')}`);
-  console.log(`Sprite: ${pokemon.sprite}`);
+
+  console.log('Quiz finished!');
+
+  console.log('\n' + '='.repeat(50));
+  console.log(`🎉 Your Pokémon Profile 🎉`);
+  console.log('-'.repeat(50));
+  console.log(`✨ #${pokemon.id}: ${pokemon.name}`);
+  console.log(`🌀 Type: ${pokemon.types.join(' / ')}`);
+  console.log(`🖼️  Sprite: ${pokemon.sprite}`);
+  console.log(`💎 Terastal Type: ${teraType}`);
+  console.log('='.repeat(50) + '\n');
+
   rl.close();
 };
 
